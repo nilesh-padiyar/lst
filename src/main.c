@@ -8,13 +8,20 @@
 #include <sys/types.h>
 
 void help(void);
-void listContents();
+void listContents(const char *path);
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
+    const char *lstPath = argv[1];
+
     if (argv[1] == NULL)
     {
-        listContents();
+        lstPath = ".";
+        listContents(lstPath);
+    } 
+    else if (argv[1] != NULL)
+    {
+        listContents(lstPath);
     }
     else if (
         argc > 3 ||
@@ -32,12 +39,12 @@ int main(int argc, char *argv[])
 void help(void)
 {
     printf("Usage: ./main <flags>\n");
-    printf("Coming Soon...\n");
+    printf("More flag usage are coming soon...\n");
 }
 
-void listContents()
+void listContents(const char* path)
 {
-    DIR *dir = opendir(".");
+    DIR *dir = opendir(path);
     
     if (dir == NULL)
     {
@@ -54,12 +61,12 @@ void listContents()
     {
         if (entry->d_type == directory)
         {
-            printf("%s \t", entry->d_name);
+            printf("%s\t", entry->d_name);
         }
 
         else if (entry->d_type == file)
         {
-            printf("%s \t", entry->d_name);
+            printf("%s\t", entry->d_name);
         }
     }
 
@@ -67,4 +74,3 @@ void listContents()
 
     closedir(dir);
 }
-

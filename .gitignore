@@ -1,1 +1,21 @@
-main
+
+# Build output
+lst
+
+# Object files
+*.o
+
+# Debug symbols
+*.dSYM/
+
+# Coverage files
+*.gcda
+*.gcno
+*.gcov
+
+# Vim/Neovim
+*.swp
+*.swo
+
+# OS files
+.DS_Store

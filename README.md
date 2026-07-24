@@ -24,10 +24,3 @@ This project exists purely for learning. The goal is to understand how a command
 **Nilesh Padiyar**
 
 ---
-
-## License
-
-MIT
-
----
-
