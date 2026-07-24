@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -pedantic
 
-SRC = main.c
+SRC = $(wildcard src/*.c)
 OUT = main
 
 all:
