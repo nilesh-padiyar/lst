@@ -59,6 +59,11 @@ void listContents(const char* path)
 
     while ((entry = readdir(dir)) != NULL)
     {
+        if (entry->d_name[0] == '.')
+        {
+            continue;
+        }
+
         if (entry->d_type == directory)
         {
             printf("%s\t", entry->d_name);

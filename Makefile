@@ -2,7 +2,7 @@
 # --- COMPILATION --- #
 
 CC = gcc
-CFLAGS = -std=c11 -Wall -Wextra -pedantic
+CFLAGS = -std=c11 -g -Wall -Wextra -pedantic
 
 SRC = $(wildcard src/*.c)
 OUT = lst
