@@ -1,4 +1,4 @@
-#define _DEFAULT_SOURCE()
+#define _DEFAULT_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,74 +8,89 @@
 #include <sys/types.h>
 
 void help(void);
-void listContents(const char *path);
+void listContents(const char *path, int showHidden);
 
 int main(int argc, char **argv)
 {
-    const char *lstPath = argv[1];
+    int showHidden = 0;
+    const char *lstPath = NULL;
 
-    if (argv[1] == NULL)
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcasecmp(argv[i], "--help") == 0 || strcasecmp(argv[i], "-h") == 0)
+        {
+            help();
+            return EXIT_SUCCESS;
+        }
+
+        if (argv[i][0] == '-')
+        {
+            for (int j = 1; argv[i][j] != '\0'; j++)
+            {
+                if (argv[i][j] == 'a')
+                {
+                    showHidden = 1;
+                }
+                else
+                {
+                    fprintf(stderr, "lst: invalid option -- '%c'\n", argv[i][j]);
+                    fprintf(stderr, "Try './lst --help' for more information.\n");
+                    return EXIT_FAILURE;
+                }
+            }
+        }
+
+        else
+        {
+            if (lstPath == NULL)
+            {
+                lstPath = argv[i];
+            }
+        }
+    }
+
+    if (lstPath == NULL)
     {
         lstPath = ".";
-        listContents(lstPath);
-    } 
-    else if (argv[1] != NULL)
-    {
-        listContents(lstPath);
-    }
-    else if (
-        argc > 3 ||
-        strcasecmp(argv[1], "--help") == 0 || 
-        strcasecmp(argv[1], "-h") == 0
-       )
-    {
-        help();
-        exit(EXIT_SUCCESS);
     }
 
-    return 0;
+    listContents(lstPath, showHidden);
+
+    return EXIT_SUCCESS;
 }
 
 void help(void)
 {
-    printf("Usage: ./main <flags>\n");
-    printf("More flag usage are coming soon...\n");
+    printf("Usage: lst [FLAGS] [DIRECTORY]\n");
+    printf("Flags:\n");
+    printf("  -a            Do not ignore entries starting with .\n");
+    printf("  -h, --help    Display this help menu\n");
 }
 
-void listContents(const char* path)
+void listContents(const char *path, int showHidden)
 {
     DIR *dir = opendir(path);
-    
+
     if (dir == NULL)
     {
-        printf("No files or directory found.\n");
+        perror("lst");
         exit(EXIT_FAILURE);
     }
 
     struct dirent *entry;
 
-    int directory = DT_DIR;
-    int file = DT_REG;
-
     while ((entry = readdir(dir)) != NULL)
     {
-        if (entry->d_name[0] == '.')
+        if (!showHidden && entry->d_name[0] == '.')
         {
             continue;
         }
 
-        if (entry->d_type == directory)
-        {
-            printf("%s\t", entry->d_name);
-        }
-
-        else if (entry->d_type == file)
-        {
-            printf("%s\t", entry->d_name);
-        }
+        printf("%s  ", entry->d_name);
     }
 
     printf("\n");
 
     closedir(dir);
 }
+
