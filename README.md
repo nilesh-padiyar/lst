@@ -16,18 +16,29 @@ This project exists purely for learning. The goal is to understand how a command
 
 ---
 
+## Features
+
+- List directory contents
+- Accept custom directory paths
+- Hide hidden files by default
+- Display hidden files with `-a`
+- `--help` / `-h` support
+- Install with `make install`
+
+---
+
 ## Project Structure
 
 ```text
-lst
-├── assets/
-│   └── demo.gif
-├── src/
-│   └── main.c
-├── LICENSE
-├── Makefile
-├── README.md
-└── lst
+lst/
+ ├── assets/
+ │   └── demo.gif
+ ├── src/
+ │   └── main.c
+ ├── Makefile
+ ├── README.md
+ ├── LICENSE
+ └── .gitignore
 ```
 
 ---
@@ -75,20 +86,55 @@ Uninstall:
 sudo make uninstall
 ```
 
-> If you are using other compiler than `GCC` then change the C Compiler (`CC`) in `Makefile` to your preferred C compiler.
+> If you prefer a different compiler (such as Clang), change the CC variable in the Makefile before building.
 
 ---
 
+## Usage
 
-## Goals
+```bash
+lst
+```
 
-* Learn directory traversal (`opendir()`, `readdir()`, `closedir()`)
-* Understand file metadata (`stat()`)
-* Practice writing command-line utilities in C
-* Explore UNIX programming concepts and APIs
+List the current directory.
+
+```bash
+lst src
+```
+
+List a specific directory.
+
+```bash
+lst -a
+```
+
+Show hidden files and directories.
+
+```bash
+lst -a src
+```
+
+Show hidden files in a specific directory.
+
+```bash
+lst --help
+```
+
+Display the help message.
 
 ---
 
+## Roadmap
+
+- [x] List current directory
+- [x] Support custom paths
+- [x] Hide hidden files by default
+- [x] Add `-a`
+- [ ] Implement `-l`
+- [ ] Sort output
+- [ ] Colorized output
+
+---
 ## Current Status
 
 lst is currently in pre-release and under active development.
