@@ -38,6 +38,7 @@ lst/
  ├── Makefile
  ├── README.md
  ├── LICENSE
+ ├── .clang-format
  └── .gitignore
 ```
 
@@ -116,6 +117,19 @@ lst -a src
 
 Show hidden files in a specific directory.
 
+
+```bash
+lst -l 
+```
+
+Show long listing format.
+
+```bash
+lst -al src
+```
+
+Show hidden files/directories with long listing format in a specific directory.
+
 ```bash
 lst --help
 ```
@@ -130,11 +144,12 @@ Display the help message.
 - [x] Support custom paths
 - [x] Hide hidden files by default
 - [x] Add `-a`
-- [ ] Implement `-l`
+- [x] Implement `-l`
 - [ ] Sort output
 - [ ] Colorized output
 
 ---
+
 ## Current Status
 
 lst is currently in pre-release and under active development.

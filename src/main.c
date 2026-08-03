@@ -1,17 +1,22 @@
 #define _DEFAULT_SOURCE
+#define MAX_PATH_LEN 1024
 
+#include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
-#include <unistd.h>
-#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 void help(void);
-void listContents(const char *path, int showHidden);
+void listContents(const char *path, int showHidden, int fileStats);
 
 int main(int argc, char **argv)
 {
+    int fileStats = 0;
     int showHidden = 0;
     const char *lstPath = NULL;
 
@@ -31,10 +36,14 @@ int main(int argc, char **argv)
                 {
                     showHidden = 1;
                 }
+                else if (argv[i][j] == 'l')
+                {
+                    fileStats = 1;
+                }
                 else
                 {
                     fprintf(stderr, "lst: invalid option -- '%c'\n", argv[i][j]);
-                    fprintf(stderr, "Try './lst --help' for more information.\n");
+                    fprintf(stderr, "Try 'lst --help' for more information.\n");
                     return EXIT_FAILURE;
                 }
             }
@@ -54,7 +63,7 @@ int main(int argc, char **argv)
         lstPath = ".";
     }
 
-    listContents(lstPath, showHidden);
+    listContents(lstPath, showHidden, fileStats);
 
     return EXIT_SUCCESS;
 }
@@ -63,20 +72,22 @@ void help(void)
 {
     printf("Usage: lst [FLAGS] [DIRECTORY]\n");
     printf("Flags:\n");
-    printf("  -a            Do not ignore entries starting with .\n");
+    printf("  -a            Don't ignore hidden entries\n");
+    printf("  -l            Show long listing format\n");
     printf("  -h, --help    Display this help menu\n");
 }
 
-void listContents(const char *path, int showHidden)
+void listContents(const char *path, int showHidden, int fileStats)
 {
     DIR *dir = opendir(path);
 
     if (dir == NULL)
     {
-        perror("lst");
+        printf("lst: can't access '%s': %s\n", path, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
+    struct stat st;
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL)
@@ -86,11 +97,28 @@ void listContents(const char *path, int showHidden)
             continue;
         }
 
-        printf("%s  ", entry->d_name);
+        char fullPath[MAX_PATH_LEN];
+        snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
+
+        if (fileStats)
+        {
+            if (stat(fullPath, &st) != -1)
+            {
+                printf("%s - %ld bytes\n", entry->d_name, st.st_size);
+            }
+            else
+            {
+                printf("lst: can't access '%s': %s\n", fullPath, strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+        }
+        else
+        {
+            printf("%s  ", entry->d_name);
+        }
     }
 
     printf("\n");
 
     closedir(dir);
 }
-
