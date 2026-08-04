@@ -8,17 +8,18 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
-void help(void);
-void listContents(const char *path, int showHidden, int fileStats);
+static void help(void);
+static void listContents(const char *path, int showHidden, int longFormat);
+static void buildPath(char *buffer, size_t size, const char *path, const char *name);
+static int isHidden(const struct dirent *entry);
+static void printLongEntry(const char *fullPath, const struct dirent *entry);
 
 int main(int argc, char **argv)
 {
-    int fileStats = 0;
     int showHidden = 0;
-    const char *lstPath = NULL;
+    int longFormat = 0;
+    const char *lstPath = ".";
 
     for (int i = 1; i < argc; i++)
     {
@@ -32,43 +33,35 @@ int main(int argc, char **argv)
         {
             for (int j = 1; argv[i][j] != '\0'; j++)
             {
-                if (argv[i][j] == 'a')
+                switch (argv[i][j])
                 {
+                case 'a':
                     showHidden = 1;
-                }
-                else if (argv[i][j] == 'l')
-                {
-                    fileStats = 1;
-                }
-                else
-                {
+                    break;
+
+                case 'l':
+                    longFormat = 1;
+                    break;
+
+                default:
                     fprintf(stderr, "lst: invalid option -- '%c'\n", argv[i][j]);
                     fprintf(stderr, "Try 'lst --help' for more information.\n");
                     return EXIT_FAILURE;
                 }
             }
         }
-
         else
         {
-            if (lstPath == NULL)
-            {
-                lstPath = argv[i];
-            }
+            lstPath = argv[i];
         }
     }
 
-    if (lstPath == NULL)
-    {
-        lstPath = ".";
-    }
-
-    listContents(lstPath, showHidden, fileStats);
+    listContents(lstPath, showHidden, longFormat);
 
     return EXIT_SUCCESS;
 }
 
-void help(void)
+static void help(void)
 {
     printf("Usage: lst [FLAGS] [DIRECTORY]\n");
     printf("Flags:\n");
@@ -77,40 +70,55 @@ void help(void)
     printf("  -h, --help    Display this help menu\n");
 }
 
-void listContents(const char *path, int showHidden, int fileStats)
+static int isHidden(const struct dirent *entry)
+{
+    return entry->d_name[0] == '.';
+}
+
+static void buildPath(char *buffer, size_t size, const char *path, const char *name)
+{
+    snprintf(buffer, size, "%s/%s", path, name);
+}
+
+static void printLongEntry(const char *fullPath, const struct dirent *entry)
+{
+    struct stat st;
+
+    if (stat(fullPath, &st) == -1)
+    {
+        fprintf(stderr, "lst: can't access '%s': %s\n", fullPath, strerror(errno));
+        return;
+    }
+
+    printf("%s - %ld bytes\n", entry->d_name, st.st_size);
+}
+
+static void listContents(const char *path, int showHidden, int longFormat)
 {
     DIR *dir = opendir(path);
 
     if (dir == NULL)
     {
-        printf("lst: can't access '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "lst: can't access '%s': %s\n", path, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    struct stat st;
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL)
     {
-        if (!showHidden && entry->d_name[0] == '.')
+        if (!showHidden && isHidden(entry))
         {
             continue;
         }
 
-        char fullPath[MAX_PATH_LEN];
-        snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
-
-        if (fileStats)
+        if (longFormat)
         {
-            if (stat(fullPath, &st) != -1)
-            {
-                printf("%s - %ld bytes\n", entry->d_name, st.st_size);
-            }
-            else
-            {
-                printf("lst: can't access '%s': %s\n", fullPath, strerror(errno));
-                exit(EXIT_FAILURE);
-            }
+            char fullPath[MAX_PATH_LEN];
+
+            buildPath(fullPath, sizeof(fullPath), path, entry->d_name);
+
+            printLongEntry(fullPath, entry);
         }
         else
         {
@@ -118,7 +126,10 @@ void listContents(const char *path, int showHidden, int fileStats)
         }
     }
 
-    printf("\n");
+    if (!longFormat)
+    {
+        printf("\n");
+    }
 
     closedir(dir);
 }
