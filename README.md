@@ -23,6 +23,7 @@ This project exists purely for learning. The goal is to understand how a command
 - Hide hidden files by default
 - Display hidden files with `-a`
 - `--help` / `-h` support
+- Long listing format with `-l`
 - Install with `make install`
 
 ---
@@ -50,7 +51,7 @@ lst/
 
 #### Requirements
 
-* GCC
+* GCC/Clang
 * GNU Make
 
 #### Clone the Repository
@@ -86,8 +87,6 @@ Uninstall:
 ```bash
 sudo make uninstall
 ```
-
-> If you prefer a different compiler (such as Clang), change the CC variable in the Makefile before building.
 
 ---
 
