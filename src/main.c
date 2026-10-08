@@ -9,18 +9,15 @@
 #include <strings.h>
 #include <sys/stat.h>
 
-<<<<<<< HEAD
 static void help(void);
 static void listContents(const char *path, int showHidden, int longFormat);
-static void buildPath(char *buffer, size_t size, const char *path, const char *name);
+static int buildPath(char *buffer,
+                     size_t size,
+                     const char *path,
+                     const char *name);
 static int isHidden(const struct dirent *entry);
 static void printLongEntry(const char *fullPath, const struct dirent *entry);
-=======
-void help(void);
-void listContents(const char *path, int showHidden, int fileStats);
-void printPermissions(mode_t mode);
-void printLongFormat(const char *name, const struct stat *st);
->>>>>>> e1ca9c7 (feat: improve long listing format)
+static void printPermissions(mode_t mode);
 
 int main(int argc, char **argv)
 {
@@ -45,7 +42,6 @@ int main(int argc, char **argv)
                 {
                 case 'a':
                     showHidden = 1;
-<<<<<<< HEAD
                     break;
 
                 case 'l':
@@ -53,22 +49,11 @@ int main(int argc, char **argv)
                     break;
 
                 default:
-                    fprintf(stderr, "lst: invalid option -- '%c'\n", argv[i][j]);
-                    fprintf(stderr, "Try 'lst --help' for more information.\n");
-=======
-                }
-                else if (argv[i][j] == 'l')
-                {
-                    fileStats = 1;
-                }
-                else
-                {
                     fprintf(stderr,
                             "lst: invalid option -- '%c'\n",
                             argv[i][j]);
                     fprintf(stderr,
                             "Try 'lst --help' for more information.\n");
->>>>>>> e1ca9c7 (feat: improve long listing format)
                     return EXIT_FAILURE;
                 }
             }
@@ -98,9 +83,14 @@ static int isHidden(const struct dirent *entry)
     return entry->d_name[0] == '.';
 }
 
-static void buildPath(char *buffer, size_t size, const char *path, const char *name)
+static int buildPath(char *buffer,
+                     size_t size,
+                     const char *path,
+                     const char *name)
 {
-    snprintf(buffer, size, "%s/%s", path, name);
+    int written = snprintf(buffer, size, "%s/%s", path, name);
+
+    return written >= 0 && (size_t)written < size;
 }
 
 static void printLongEntry(const char *fullPath, const struct dirent *entry)
@@ -109,125 +99,39 @@ static void printLongEntry(const char *fullPath, const struct dirent *entry)
 
     if (stat(fullPath, &st) == -1)
     {
-        fprintf(stderr, "lst: can't access '%s': %s\n", fullPath, strerror(errno));
+        fprintf(stderr,
+                "lst: can't access '%s': %s\n",
+                fullPath,
+                strerror(errno));
         return;
     }
 
-    printf("%s - %ld bytes\n", entry->d_name, st.st_size);
-}
-
-static void listContents(const char *path, int showHidden, int longFormat)
-{
-    DIR *dir = opendir(path);
-
-    if (dir == NULL)
-    {
-<<<<<<< HEAD
-        fprintf(stderr, "lst: can't access '%s': %s\n", path, strerror(errno));
-=======
-        fprintf(stderr,
-                "lst: can't access '%s': %s\n",
-                path,
-                strerror(errno));
->>>>>>> e1ca9c7 (feat: improve long listing format)
-        exit(EXIT_FAILURE);
-    }
-
-    struct dirent *entry;
-
-    while ((entry = readdir(dir)) != NULL)
-    {
-        if (!showHidden && isHidden(entry))
-        {
-            continue;
-        }
-
-<<<<<<< HEAD
-        if (longFormat)
-        {
-            char fullPath[MAX_PATH_LEN];
-
-            buildPath(fullPath, sizeof(fullPath), path, entry->d_name);
-
-            printLongEntry(fullPath, entry);
-=======
-        char fullPath[MAX_PATH_LEN];
-
-        if (snprintf(fullPath,
-                     sizeof(fullPath),
-                     "%s/%s",
-                     path,
-                     entry->d_name) >= (int)sizeof(fullPath))
-        {
-            fprintf(stderr,
-                    "lst: path too long: '%s/%s'\n",
-                    path,
-                    entry->d_name);
-            continue;
-        }
-
-        if (stat(fullPath, &st) == -1)
-        {
-            fprintf(stderr,
-                    "lst: can't access '%s': %s\n",
-                    fullPath,
-                    strerror(errno));
-            continue;
-        }
-
-        if (fileStats)
-        {
-            printLongFormat(entry->d_name, &st);
->>>>>>> e1ca9c7 (feat: improve long listing format)
-        }
-        else
-        {
-            printf("%s  ", entry->d_name);
-        }
-    }
-
-<<<<<<< HEAD
-    if (!longFormat)
-    {
-        printf("\n");
-=======
-    if (!fileStats)
-    {
-        putchar('\n');
->>>>>>> e1ca9c7 (feat: improve long listing format)
-    }
-
-    closedir(dir);
-}
-
-void printLongFormat(const char *name, const struct stat *st)
-{
     /* File type */
-    if (S_ISREG(st->st_mode))
+    if (S_ISREG(st.st_mode))
     {
         putchar('-');
     }
-    else if (S_ISDIR(st->st_mode))
+    else if (S_ISDIR(st.st_mode))
     {
         putchar('d');
     }
-    else if (S_ISLNK(st->st_mode))
+    else if (S_ISLNK(st.st_mode))
     {
         putchar('l');
     }
-    else if (S_ISCHR(st->st_mode))
+    else if (S_ISCHR(st.st_mode))
     {
         putchar('c');
     }
-    else if (S_ISBLK(st->st_mode))
+    else if (S_ISBLK(st.st_mode))
     {
         putchar('b');
     }
-    else if (S_ISFIFO(st->st_mode))
+    else if (S_ISFIFO(st.st_mode))
     {
         putchar('p');
     }
-    else if (S_ISSOCK(st->st_mode))
+    else if (S_ISSOCK(st.st_mode))
     {
         putchar('s');
     }
@@ -237,13 +141,13 @@ void printLongFormat(const char *name, const struct stat *st)
     }
 
     /* Permissions */
-    printPermissions(st->st_mode);
+    printPermissions(st.st_mode);
 
     /* File size and name */
-    printf(" %8ld %s\n", (long)st->st_size, name);
+    printf(" %8ld %s\n", (long)st.st_size, entry->d_name);
 }
 
-void printPermissions(mode_t mode)
+static void printPermissions(mode_t mode)
 {
     /* Owner */
     putchar(mode & S_IRUSR ? 'r' : '-');
@@ -259,4 +163,58 @@ void printPermissions(mode_t mode)
     putchar(mode & S_IROTH ? 'r' : '-');
     putchar(mode & S_IWOTH ? 'w' : '-');
     putchar(mode & S_IXOTH ? 'x' : '-');
+}
+
+static void listContents(const char *path, int showHidden, int longFormat)
+{
+    DIR *dir = opendir(path);
+
+    if (dir == NULL)
+    {
+        fprintf(stderr,
+                "lst: can't access '%s': %s\n",
+                path,
+                strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (!showHidden && isHidden(entry))
+        {
+            continue;
+        }
+
+        if (longFormat)
+        {
+            char fullPath[MAX_PATH_LEN];
+
+            if (!buildPath(fullPath,
+                           sizeof(fullPath),
+                           path,
+                           entry->d_name))
+            {
+                fprintf(stderr,
+                        "lst: path too long: '%s/%s'\n",
+                        path,
+                        entry->d_name);
+                continue;
+            }
+
+            printLongEntry(fullPath, entry);
+        }
+        else
+        {
+            printf("%s  ", entry->d_name);
+        }
+    }
+
+    if (!longFormat)
+    {
+        putchar('\n');
+    }
+
+    closedir(dir);
 }
